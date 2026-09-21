@@ -8,9 +8,9 @@ consultancies pitch obesity-drug development strategy to sponsors
 and [IQVIA's obesity therapeutics coverage](https://www.iqvia.com/blogs/2026/02/obesity-clinical-trials)).
 It turns that pitch into code: given the GLP-1 / dual-agonist obesity
 landscape, 
-**(1) how large does a Phase 3 confirmatory trial actually need to
+/(1) how large does a Phase 3 confirmatory trial actually need to
 be, and 
-**(2) where would a candidate rank against the drugs already on the
+/(2) where would a candidate rank against the drugs already on the
 market, based on publicly reported trial results?
 
 
