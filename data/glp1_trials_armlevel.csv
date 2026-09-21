@@ -1,0 +1,12 @@
+study,year,journal,treatment,dose,n,weight_pct_change_mean,sd_assumed,duration_weeks,is_study_baseline,source_url
+STEP1,2021,NEJM,Placebo,NA,655,-2.4,10,68,TRUE,https://www.nejm.org/doi/full/10.1056/NEJMoa2032183
+STEP1,2021,NEJM,Semaglutide,2.4mg,1306,-14.9,10,68,FALSE,https://www.nejm.org/doi/full/10.1056/NEJMoa2032183
+STEP8,2022,JAMA,Placebo,NA,85,-1.9,10,68,TRUE,https://jamanetwork.com/journals/jama/fullarticle/2787907
+STEP8,2022,JAMA,Semaglutide,2.4mg,126,-15.8,10,68,FALSE,https://jamanetwork.com/journals/jama/fullarticle/2787907
+STEP8,2022,JAMA,Liraglutide,3.0mg,127,-6.4,10,68,FALSE,https://jamanetwork.com/journals/jama/fullarticle/2787907
+SURMOUNT1,2022,NEJM,Placebo,NA,635,-3.1,10,72,TRUE,https://www.nejm.org/doi/full/10.1056/NEJMoa2206038
+SURMOUNT1,2022,NEJM,Tirzepatide,5mg,635,-15.0,10,72,FALSE,https://www.nejm.org/doi/full/10.1056/NEJMoa2206038
+SURMOUNT1,2022,NEJM,Tirzepatide,10mg,635,-19.5,10,72,FALSE,https://www.nejm.org/doi/full/10.1056/NEJMoa2206038
+SURMOUNT1,2022,NEJM,Tirzepatide,15mg,634,-20.9,10,72,FALSE,https://www.nejm.org/doi/full/10.1056/NEJMoa2206038
+SURMOUNT5,2025,NEJM,Semaglutide,2.4mg,375,-13.7,10,72,TRUE,https://www.nejm.org/doi/10.1056/NEJMoa2410819
+SURMOUNT5,2025,NEJM,Tirzepatide,15mg,376,-20.2,10,72,FALSE,https://www.nejm.org/doi/10.1056/NEJMoa2410819
