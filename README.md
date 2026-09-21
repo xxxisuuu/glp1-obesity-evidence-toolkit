@@ -7,16 +7,21 @@ consultancies pitch obesity-drug development strategy to sponsors
 [Certara's CODEX GLP-1 outcomes database](https://www.certara.com/fact-sheet/weight-loss-glp-1-clinical-outcomes-database-fact-sheet/),
 and [IQVIA's obesity therapeutics coverage](https://www.iqvia.com/blogs/2026/02/obesity-clinical-trials)).
 It turns that pitch into code: given the GLP-1 / dual-agonist obesity
-landscape, 
-- how large does a Phase 3 confirmatory trial actually need to
-be, and 
-- where would a candidate rank against the drugs already on the
+landscape, (1) how large does a Phase 3 confirmatory trial actually need to
+be, and (2) where would a candidate rank against the drugs already on the
 market, based on publicly reported trial results?
 
+This project accompanies a longer project-design document
+([`docs/project-design.md`](docs/project-design.md) -- a Phase 3 confirmatory
+RCT + competitor network meta-analysis) written from a
+biostatistician/consultant perspective; this repo is the executable,
+testable half of that work.
 
 ## What's here
 
 ```
+docs/
+  project-design.md            The full Phase 3 RCT + NMA project design document
 data/
   glp1_trials_armlevel.csv     Arm-level results from 4 public Phase 3 trials
 R/
@@ -42,7 +47,7 @@ plan_sample_size(delta = 8, sd = 10, power = 0.9, ratio = 2, dropout = 0.2)
 scenario_table()
 
 # 2. Network meta-analysis (console output + plots)
-Rscript analysis/02_nma_analysis.R     # or source() it interactively
+Rscript analysis/02_nma_analysis.R      # or source() it interactively
 
 # 3. Full HTML report
 rmarkdown::render("analysis/report.Rmd")
@@ -82,21 +87,22 @@ arm and one direct head-to-head comparison:
 |---|---|---|---|
 | STEP 1 (2021, NEJM) | Semaglutide 2.4mg vs Placebo | -14.9% vs -2.4% | [NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2032183) |
 | STEP 8 (2022, JAMA) | Semaglutide 2.4mg vs Liraglutide 3.0mg vs Placebo | -15.8% / -6.4% / -1.9% | [JAMA](https://jamanetwork.com/journals/jama/fullarticle/2787907) |
-| sURMOUNT-1 (2022, NEJM) | Tirzepatide 5/10/15mg vs Placebo | -15.0% / -19.5% / -20.9% vs -3.1% | [NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2206038) |
+| SURMOUNT-1 (2022, NEJM) | Tirzepatide 5/10/15mg vs Placebo | -15.0% / -19.5% / -20.9% vs -3.1% | [NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2206038) |
 | SURMOUNT-5 (2025, NEJM) | Tirzepatide (MTD) vs Semaglutide 2.4mg | -20.2% vs -13.7% | [NEJM](https://www.nejm.org/doi/10.1056/NEJMoa2410819) |
 
 Because SURMOUNT-5 provides a *direct* tirzepatide-vs-semaglutide comparison
 that can be checked against the *indirect* route through Placebo, this small
 network includes a genuine (if weak, with only one loop) consistency check --
-the same node-splitting logic described in the project design document, just
-at demo scale.
+the same node-splitting logic described in the
+[project design document](docs/project-design.md), just at demo scale.
 
 **Read `analysis/report.Rmd`'s "Limitations" section before quoting any
 number from this repo** -- per-arm standard deviations are not all publicly
 reported and are approximated at 10 percentage points throughout (justified
-in the report); this is a fixed-effect model where the design document
-specifies Bayesian random-effects; and the four trials were chosen for
-network connectivity, not from a systematic search.
+in the report); this is a fixed-effect model where the
+[design document](docs/project-design.md) specifies Bayesian random-effects;
+and the four trials were chosen for network connectivity, not from a
+systematic search.
 
 ## Why a from-scratch NMA implementation instead of `netmeta`
 
@@ -119,6 +125,6 @@ claims no rights over the underlying clinical trial results.
 
 This is a portfolio / methodology-demonstration project, not a submission-
 grade evidence package. It illustrates the statistical logic described in the
-accompanying project design document using public data and simplifying
-assumptions; it is not affiliated with, and does not represent the views of,
-any of the companies or trials referenced above.
+accompanying [project design document](docs/project-design.md) using public
+data and simplifying assumptions; it is not affiliated with, and does not
+represent the views of, any of the companies or trials referenced above.
