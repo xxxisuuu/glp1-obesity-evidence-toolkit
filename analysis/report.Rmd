@@ -1,0 +1,147 @@
+---
+title: "GLP-1 Obesity Evidence Toolkit: Trial Design & Network Meta-Analysis"
+subtitle: "Market positioning determines trial design"
+date: "`r format(Sys.Date(), '%Y-%m-%d')`"
+output:
+  html_document:
+    toc: true
+    toc_float: true
+    theme: flatly
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE, fig.width = 7.5, fig.height = 4.2)
+source("../R/sample_size.R")
+source("../R/nma_helpers.R")
+library(ggplot2)
+library(DT)
+```
+
+## Why this exists
+
+Parexel's *"Navigating to 2030"* playbook for obesity therapies opens with a
+line worth taking literally: **decision-making must begin with precise market
+positioning, which in turn determines optimal trial designs.** This toolkit
+takes that claim and makes it computable. It does two things a sponsor or a
+CRO's biostatistics team would actually need to do before writing a Phase 3
+protocol in this drug class:
+
+1. **Ask what sample size the primary efficacy comparison really requires** --
+   and check that against the FDA's 2025 draft guidance safety-database floor,
+   since obesity trials are unusually likely to be safety-, not efficacy-,
+   constrained.
+2. **Quantify where a candidate would land competitively** using a network
+   meta-analysis of publicly reported Phase 3 results for the drugs already on
+   the market or about to be, since head-to-head trials against every
+   competitor are never feasible.
+
+Everything below is computed live from the source data and code in this
+repository, not pasted in from a report.
+
+## Part A: how big does the trial actually need to be?
+
+```{r ss-table}
+tab <- scenario_table(deltas = c(3, 5, 8, 10, 12, 15, 18), sd = 10, power = 0.90,
+                       alpha = 0.05, ratio = 2, dropout = 0.20)
+knitr::kable(tab, digits = 0,
+             col.names = c("Assumed delta (pp)", "SD", "Power", "Alpha", "Ratio", "Dropout",
+                           "Efficacy N (control)", "Efficacy N (active)",
+                           "Safety floor (control)", "Safety floor (active)",
+                           "Final N (control)", "Final N (active)", "Final N (total)",
+                           "Binding constraint"))
+```
+
+```{r ss-plot}
+tab$eff_total <- tab$efficacy_driven_control + tab$efficacy_driven_active
+ggplot(tab, aes(x = delta)) +
+  geom_line(aes(y = eff_total, color = "Efficacy-driven total N"), linewidth = 1) +
+  geom_hline(aes(yintercept = 4500, color = "FDA safety floor (total)"), linewidth = 1, linetype = "dashed") +
+  scale_color_manual(values = c("Efficacy-driven total N" = "#3B6E8F", "FDA safety floor (total)" = "#C0392B")) +
+  labs(x = "Assumed placebo-adjusted effect (percentage points)", y = "Total N", color = NULL,
+       title = "Across the plausible effect-size range, the safety floor dominates") +
+  theme_minimal(base_size = 12) + theme(legend.position = "top")
+```
+
+Across the entire range of effect sizes actually observed in this drug class
+(roughly 8-20 placebo-adjusted percentage points, see Part B), the efficacy
+comparison alone would be answerable with a few dozen patients per arm. What
+actually sets the trial's size is the FDA's 2025 draft-guidance requirement of
+&ge;3,000 subjects exposed to the investigational drug and &ge;1,500 to
+placebo for &ge;1 year at the maintenance dose -- consistent with the observed
+sizes of STEP 1 (n=1,961) and SURMOUNT-1 (n=2,539). A protocol synopsis that
+sizes the trial from the power calculation alone, without checking it against
+the safety floor, understates the true enrollment target.
+
+## Part B: where does a candidate land competitively?
+
+```{r nma-fit}
+armdata <- read_armdata("../data/glp1_trials_armlevel.csv")
+net <- build_network(armdata, reference = "Placebo")
+fit <- fit_nma(net)
+fd <- forest_data(fit)
+sc <- sucra(fit)
+```
+
+```{r nma-forest}
+fd$treatment <- factor(fd$treatment, levels = fd$treatment[order(fd$estimate)])
+ggplot(fd, aes(x = estimate, y = treatment)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_errorbarh(aes(xmin = lower, xmax = upper), height = 0.15) +
+  geom_point(size = 2.5) +
+  labs(x = "% body weight change vs Placebo (pp, 95% CI)", y = NULL,
+       title = "Network estimate of weight change at ~68-72 weeks") +
+  theme_minimal(base_size = 12)
+```
+
+```{r nma-sucra-table}
+knitr::kable(sc, digits = 3, col.names = c("Treatment", "SUCRA", "P(best)", "Mean rank"))
+```
+
+The network connects four published Phase 3 trials (STEP 1, STEP 8,
+SURMOUNT-1, SURMOUNT-5) through a shared Placebo node and one direct
+head-to-head link (SURMOUNT-5: tirzepatide vs. semaglutide), so the direct
+tirzepatide-vs-semaglutide evidence can be checked against the indirect
+route through Placebo. The global consistency test gives
+Q = `r round(fit$Q, 2)` on `r fit$df` df (p = `r round(fit$Q_pvalue, 3)`),
+i.e. no evidence against the transitivity assumption in this small network --
+though with only one closed loop this is a weak check, not a guarantee (see
+Limitations).
+
+```{r nma-league}
+DT::datatable(as.data.frame(league_table(fit)),
+              caption = "League table: row minus column, 95% CI, percentage points",
+              options = list(dom = "t", scrollX = TRUE))
+```
+
+## Limitations (read this before citing any number above)
+
+- **Standard deviations are assumed, not sourced**, at 10 percentage points
+  for every arm. Most public trial summaries (press releases, news coverage)
+  report means and, at best, a treatment-difference confidence interval --
+  not per-arm SDs. Where a difference and its CI were directly reported
+  (e.g. STEP 1: -12.4pp, 95% CI -13.4 to -11.5), the implied SD is close to
+  10, which is why that value was used throughout; this should be replaced
+  with trial-reported SDs (or full summary statistics from the original
+  papers/supplements) before this analysis is used for anything beyond
+  illustration.
+- **This is a fixed-effect model.** The project design document specifies a
+  Bayesian random-effects NMA; this repository's from-scratch implementation
+  (`R/nma_helpers.R`) reproduces the fixed-effect special case only, because
+  `netmeta`/`gemtc` could not be installed from CRAN in this environment. See
+  the commented block at the end of `analysis/02_nma_analysis.R` for how to
+  swap in `netmeta` if you have full package access.
+- **SURMOUNT-5's tirzepatide arm used the maximum tolerated dose (up to
+  15 mg)**, which is treated here as equivalent to the SURMOUNT-1 15 mg arm.
+  This is a simplification.
+- **This is not a systematic review.** Four trials were chosen because they
+  form a connected, illustrative network with a genuine head-to-head link,
+  not because a systematic search was run. A real submission-grade NMA
+  requires the full PICOS-driven search described in the project design
+  document.
+
+## Data sources
+
+```{r sources}
+knitr::kable(unique(armdata[, c("study", "year", "journal", "source_url")]),
+             row.names = FALSE, col.names = c("Trial", "Year", "Journal", "Source"))
+```
