@@ -11,9 +11,6 @@ landscape, (1) how large does a Phase 3 confirmatory trial actually need to
 be, and (2) where would a candidate rank against the drugs already on the
 market, based on publicly reported trial results?
 
-This project accompanies a longer project-design document (III期确证性RCT +
-竞品网络Meta分析) written from a biostatistician/consultant perspective; this
-repo is the executable, testable half of that work.
 
 ## What's here
 
