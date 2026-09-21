@@ -1,0 +1,8 @@
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+analysis/output/
+analysis/report_cache/
+analysis/report_files/
+.DS_Store
