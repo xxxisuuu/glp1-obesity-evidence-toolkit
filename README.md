@@ -1,38 +1,36 @@
 # GLP-1 Obesity Evidence Toolkit
 
-**Market positioning determines trial design.** This repository is a small,
-fully reproducible R project inspired by how CROs and biostatistics
-consultancies pitch obesity-drug development strategy to sponsors
-(see [Parexel's *"Navigating to 2030"* playbook](https://www.parexel.com/insights/playbook/navigating-to-2030-a-playbook-for-differentiating-next-generation-obesity-therapies),
-[Certara's CODEX GLP-1 outcomes database](https://www.certara.com/fact-sheet/weight-loss-glp-1-clinical-outcomes-database-fact-sheet/),
-and [IQVIA's obesity therapeutics coverage](https://www.iqvia.com/blogs/2026/02/obesity-clinical-trials)).
-It turns that pitch into code: given the GLP-1 / dual-agonist obesity
-landscape, (1) how large does a Phase 3 confirmatory trial actually need to
-be, and (2) where would a candidate rank against the drugs already on the
-market, based on publicly reported trial results?
+An R project that works through two questions a sponsor would ask before
+starting a Phase 3 obesity trial in the GLP-1 / dual-agonist space:
 
-This project accompanies a longer project-design document
-([`docs/project-design.md`](docs/project-design.md) -- a Phase 3 confirmatory
-RCT + competitor network meta-analysis) written from a
-biostatistician/consultant perspective; this repo is the executable,
-testable half of that work.
+1. How many patients does the confirmatory trial need?
+2. Based on published trial results, where would a new candidate rank
+   against semaglutide, tirzepatide and liraglutide?
 
-## What's here
+I got the idea from reading how CROs frame obesity development strategy for
+sponsors, in particular
+[Parexel's *Navigating to 2030* playbook](https://www.parexel.com/insights/playbook/navigating-to-2030-a-playbook-for-differentiating-next-generation-obesity-therapies),
+[Certara's CODEX GLP-1 outcomes database](https://www.certara.com/fact-sheet/weight-loss-glp-1-clinical-outcomes-database-fact-sheet/)
+and [IQVIA's obesity trials coverage](https://www.iqvia.com/blogs/2026/02/obesity-clinical-trials).
+The full study design (Phase 3 RCT plus a competitor network meta-analysis)
+is written up in [`project-design.md`](project-design.md). This repo has the
+code that goes with it.
+
+## Repository layout
 
 ```
-docs/
-  project-design.md            The full Phase 3 RCT + NMA project design document
+project-design.md              Phase 3 RCT + NMA design document
 data/
-  glp1_trials_armlevel.csv     Arm-level results from 4 public Phase 3 trials
+  glp1_trials_armlevel.csv     Arm-level results from 4 published Phase 3 trials
 R/
-  sample_size.R                Efficacy-driven vs. FDA-safety-floor sample size
-  nma_helpers.R                From-scratch contrast-based (GLS) network meta-analysis
+  sample_size.R                Efficacy-based vs. FDA safety-exposure sample size
+  nma_helpers.R                Contrast-based (GLS) network meta-analysis
 analysis/
-  01_sample_size_scenarios.R   Sample-size scenario grid, script + console output
-  02_nma_analysis.R            NMA: forest plot, league table, SUCRA ranking
-  report.Rmd                   Knits the two analyses into one HTML report
+  01_sample_size_scenarios.R   Sample-size scenario grid
+  02_nma_analysis.R            NMA: forest plot, league table, SUCRA
+  report.Rmd                   HTML report combining both analyses
 shiny/
-  app.R                        Interactive sample-size calculator + NMA explorer
+  app.R                        Sample-size calculator + NMA explorer
 ```
 
 ## Quick start
@@ -41,90 +39,82 @@ shiny/
 # from the repository root
 install.packages(c("shiny", "ggplot2", "rmarkdown", "DT", "MASS"))  # if needed
 
-# 1. Sample size scenarios (console output)
+# 1. Sample size scenarios
 source("R/sample_size.R")
 plan_sample_size(delta = 8, sd = 10, power = 0.9, ratio = 2, dropout = 0.2)
 scenario_table()
 
-# 2. Network meta-analysis (console output + plots)
-Rscript analysis/02_nma_analysis.R      # or source() it interactively
+# 2. Network meta-analysis
+source("analysis/02_nma_analysis.R")
 
-# 3. Full HTML report
+# 3. HTML report
 rmarkdown::render("analysis/report.Rmd")
 
-# 4. Interactive app
+# 4. Shiny app
 shiny::runApp("shiny")
 ```
 
-## Part A -- how big does the trial need to be?
+## Part A: sample size
 
-`R/sample_size.R` compares two, usually very different, numbers:
+`R/sample_size.R` compares two numbers:
 
-- an **efficacy-driven** per-arm N from the standard two-sample power formula
-  for a continuous endpoint, and
-- the **FDA safety floor** from the 2025 draft guidance *"Obesity and
-  Overweight: Developing Drugs and Biological Products for Weight
-  Reduction"* ([Federal Register](https://www.federalregister.gov/documents/2025/01/08/2025-00237/obesity-and-overweight-developing-drugs-and-biological-products-for-weight-reduction-draft-guidance),
-  summarized by [Medpace](https://www.medpace.com/blog/new-fda-guidance-developing-drugs-and-biological-products-for-weight-reduction/)):
-  &ge;3,000 subjects exposed to the investigational drug and &ge;1,500 to
-  placebo, each for &ge;1 year at the maintenance dose.
+- the **efficacy-based** per-arm N from the usual two-sample power formula
+  for a continuous endpoint (% change in body weight), and
+- the **safety exposure requirement** in FDA's 2025 draft guidance
+  *Obesity and Overweight: Developing Drugs and Biological Products for
+  Weight Reduction*
+  ([Federal Register](https://www.federalregister.gov/documents/2025/01/08/2025-00237/obesity-and-overweight-developing-drugs-and-biological-products-for-weight-reduction-draft-guidance);
+  summary from [Medpace](https://www.medpace.com/blog/new-fda-guidance-developing-drugs-and-biological-products-for-weight-reduction/)):
+  at least 3,000 participants on drug and 1,500 on placebo for 1 year or
+  more at the maintenance dose.
 
-Running `scenario_table()` across a realistic range of assumed effect sizes
-shows the safety floor binding in every case -- which is exactly why real
-trials in this class (STEP 1: n=1,961; SURMOUNT-1: n=2,539) are sized well
-above what the primary-endpoint comparison alone would require. That is the
-project's one concrete, checkable claim about "how trial design decisions get
-made" in this therapeutic area.
+Across every effect size in `scenario_table()`, the safety requirement is
+the larger number by a wide margin. This matches what happened in practice:
+STEP 1 (n = 1,961) and SURMOUNT-1 (n = 2,539) enrolled far more patients
+than their primary endpoints required.
 
-## Part B -- where does a candidate rank?
+## Part B: network meta-analysis
 
-`R/nma_helpers.R` implements a fixed-effect, contrast-based network
-meta-analysis (Lu & Ades graph-theoretical formulation; White 2011) from
-first principles, connecting four published trials through a shared Placebo
-arm and one direct head-to-head comparison:
+`R/nma_helpers.R` fits a fixed-effect, contrast-based NMA (Lu & Ades 2004;
+White 2011) across four trials connected through placebo, plus one direct
+head-to-head comparison:
 
-| Trial | Comparison | Result at ~68-72 weeks | Source |
+| Trial | Comparison | Weight change at ~68-72 weeks | Source |
 |---|---|---|---|
-| STEP 1 (2021, NEJM) | Semaglutide 2.4mg vs Placebo | -14.9% vs -2.4% | [NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2032183) |
-| STEP 8 (2022, JAMA) | Semaglutide 2.4mg vs Liraglutide 3.0mg vs Placebo | -15.8% / -6.4% / -1.9% | [JAMA](https://jamanetwork.com/journals/jama/fullarticle/2787907) |
-| SURMOUNT-1 (2022, NEJM) | Tirzepatide 5/10/15mg vs Placebo | -15.0% / -19.5% / -20.9% vs -3.1% | [NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2206038) |
-| SURMOUNT-5 (2025, NEJM) | Tirzepatide (MTD) vs Semaglutide 2.4mg | -20.2% vs -13.7% | [NEJM](https://www.nejm.org/doi/10.1056/NEJMoa2410819) |
+| STEP 1 (2021, NEJM) | Semaglutide 2.4 mg vs Placebo | -14.9% vs -2.4% | [NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2032183) |
+| STEP 8 (2022, JAMA) | Semaglutide 2.4 mg vs Liraglutide 3.0 mg vs Placebo | -15.8% / -6.4% / -1.9% | [JAMA](https://jamanetwork.com/journals/jama/fullarticle/2787907) |
+| SURMOUNT-1 (2022, NEJM) | Tirzepatide 5/10/15 mg vs Placebo | -15.0% / -19.5% / -20.9% vs -3.1% | [NEJM](https://www.nejm.org/doi/full/10.1056/NEJMoa2206038) |
+| SURMOUNT-5 (2025, NEJM) | Tirzepatide (MTD) vs Semaglutide 2.4 mg | -20.2% vs -13.7% | [NEJM](https://www.nejm.org/doi/10.1056/NEJMoa2410819) |
 
-Because SURMOUNT-5 provides a *direct* tirzepatide-vs-semaglutide comparison
-that can be checked against the *indirect* route through Placebo, this small
-network includes a genuine (if weak, with only one loop) consistency check --
-the same node-splitting logic described in the
-[project design document](docs/project-design.md), just at demo scale.
+SURMOUNT-5 compares tirzepatide and semaglutide directly, so the direct
+estimate can be checked against the indirect one through placebo. With only
+one closed loop this is a limited consistency check, but it follows the
+node-splitting approach in the design document.
 
-**Read `analysis/report.Rmd`'s "Limitations" section before quoting any
-number from this repo** -- per-arm standard deviations are not all publicly
-reported and are approximated at 10 percentage points throughout (justified
-in the report); this is a fixed-effect model where the
-[design document](docs/project-design.md) specifies Bayesian random-effects;
-and the four trials were chosen for network connectivity, not from a
-systematic search.
+I implemented the NMA directly in base R + MASS instead of calling
+`netmeta`, mainly to keep the GLS steps visible and the dependencies small.
+The results can be cross-checked with `netmeta::netmeta()` using the
+commented block at the end of `analysis/02_nma_analysis.R`.
 
-## Why a from-scratch NMA implementation instead of `netmeta`
+### Limitations
 
-`netmeta` and `gemtc` are CRAN-only and could not be installed in the
-environment this repository was built in (no CRAN mirror was reachable, only
-Ubuntu's `r-cran-*` apt packages). `R/nma_helpers.R` reproduces the
-fixed-effect special case of the same underlying method using only base R +
-MASS, so the whole repository runs with `apt install r-cran-{shiny,ggplot2,
-rmarkdown,dt,metafor,dplyr,tidyr,knitr,mass}` and nothing else. If you have
-full CRAN access, swap in `netmeta::netmeta()` -- see the commented block at
-the end of `analysis/02_nma_analysis.R`.
+See the Limitations section of `analysis/report.Rmd` before using any of
+these numbers. In short:
+
+- Per-arm SDs are not all published, so 10 percentage points is assumed for
+  every arm (the report explains why).
+- The model is fixed-effect; the design document specifies a Bayesian
+  random-effects model.
+- The four trials were picked to form a connected network, not from a
+  systematic search.
 
 ## License
 
-MIT -- see `LICENSE`. Trial data are means/estimates transcribed from public
-sources (cited above and in `data/glp1_trials_armlevel.csv`); this repository
-claims no rights over the underlying clinical trial results.
+MIT, see `LICENSE`. Trial results are summary estimates taken from the
+published sources listed above and in `data/glp1_trials_armlevel.csv`.
 
 ## Disclaimer
 
-This is a portfolio / methodology-demonstration project, not a submission-
-grade evidence package. It illustrates the statistical logic described in the
-accompanying [project design document](docs/project-design.md) using public
-data and simplifying assumptions; it is not affiliated with, and does not
-represent the views of, any of the companies or trials referenced above.
+This is a portfolio project that demonstrates methods on public data with
+simplifying assumptions. It is not a regulatory-grade evidence package and
+is not affiliated with any of the companies or trials mentioned.
