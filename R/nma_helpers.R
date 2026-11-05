@@ -7,15 +7,11 @@
 # Lu & Ades (2004) and White (2011, "Multivariate random-effects
 # meta-regression").
 #
-# WHY A CUSTOM IMPLEMENTATION: the project design document (Part B) specifies
-# a Bayesian hierarchical random-effects NMA fitted with dedicated software
-# (netmeta / gemtc / WinBUGS-style MCMC). Those packages are CRAN-only and
-# were not installable in this environment's offline build (no CRAN mirror
-# reachable). The functions below reproduce the *fixed-effect* special case
-# of the same methodology from first principles using arm-level trial data,
-# so the repository is fully reproducible without any restricted network
-# access. If netmeta is available in your own R installation, swap it in --
-# see the commented block at the bottom of analysis/02_nma_analysis.R.
+# NOTE: the design document (Part B) specifies a Bayesian random-effects NMA
+# (e.g. gemtc / JAGS). This file implements only the fixed-effect case, written
+# directly with base R + MASS so each GLS step is easy to follow and the
+# project has few dependencies. To cross-check against netmeta, see the
+# commented block at the bottom of analysis/02_nma_analysis.R.
 #
 # METHOD
 #   For every trial, one arm is designated the study's own reference arm
