@@ -113,7 +113,7 @@ DT::datatable(as.data.frame(league_table(fit)),
               options = list(dom = "t", scrollX = TRUE))
 ```
 
-## Limitations (read this before citing any number above)
+## Limitations
 
 - **Standard deviations are assumed, not sourced**, at 10 percentage points
   for every arm. Most public trial summaries (press releases, news coverage)
@@ -124,17 +124,16 @@ DT::datatable(as.data.frame(league_table(fit)),
   with trial-reported SDs (or full summary statistics from the original
   papers/supplements) before this analysis is used for anything beyond
   illustration.
-- **This is a fixed-effect model.** The project design document specifies a
-  Bayesian random-effects NMA; this repository's from-scratch implementation
-  (`R/nma_helpers.R`) reproduces the fixed-effect special case only, because
-  `netmeta`/`gemtc` could not be installed from CRAN in this environment. See
-  the commented block at the end of `analysis/02_nma_analysis.R` for how to
-  swap in `netmeta` if you have full package access.
+- **Fixed-effect model.** The design document specifies a Bayesian
+  random-effects NMA; `R/nma_helpers.R` implements only the fixed-effect
+  case. Between-trial heterogeneity is therefore not modelled, and the
+  intervals above are likely too narrow. The commented block at the end of
+  `analysis/02_nma_analysis.R` shows how to refit the network with `netmeta`.
 - **SURMOUNT-5's tirzepatide arm used the maximum tolerated dose (up to
   15 mg)**, which is treated here as equivalent to the SURMOUNT-1 15 mg arm.
   This is a simplification.
 - **This is not a systematic review.** Four trials were chosen because they
-  form a connected, illustrative network with a genuine head-to-head link,
+  form a connected network that includes a direct head-to-head comparison,
   not because a systematic search was run. A real submission-grade NMA
   requires the full PICOS-driven search described in the project design
   document.
